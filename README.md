@@ -202,8 +202,12 @@ Eliminate the opponent's **Oracle** (King equivalent) to win the game.
 
 ## Migration to React + Vite
 
-The legacy static site lives in the `legacy/` folder. Work is in progress to convert each
-HTML page and accompanying scripts into React components under `src/`.
+The legacy static site lives in the `legacy/` folder. For the time being the entire
+`legacy/` tree is also mirrored under `public/legacy` so that CSS/JS assets referenced by
+the raw HTML remain available during development.
+
+Work is in progress to convert each HTML page and accompanying scripts into React
+components and pages under `src/` using React Router.
 
 ### Quickstart
 
@@ -212,6 +216,21 @@ pnpm install
 pnpm run dev        # start dev server on http://localhost:5173
 pnpm run build      # produce production bundle in ./dist
 ```
+
+### Routes available during migration
+
+The React application currently mirrors the legacy pages via client routing.  The `/` route has already been rewritten as a full JSX page with the original
+markup and head metadata preserved; other routes are still injected HTML but
+their conversion is underway.
+
+- `/` → home (legacy `index.html` converted to React component `HomePage.tsx`; all page sections now present and meta tags moved into `src/index.html`)
+- `/menu` → menu screen
+- `/app` → gameplay page
+- `/demo` → tutorial/demo page
+
+Navigation within these pages is intercepted by the router so links work without
+full reloads; the pages themselves are rendered by injecting the original HTML
+via `dangerouslySetInnerHTML` and will be progressively rewritten in JSX.
 
 Assets such as images, fonts and audio can be kept in `public/assets/` and referenced
 from React code. Feel free to consult files in `legacy/` when porting behaviour.
