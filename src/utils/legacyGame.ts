@@ -1,8 +1,11 @@
 // legacyGame.ts
 // Translated from public/js/app.js into TypeScript and exposed as a loader
 
+import { Game } from './Game';
+import { P2PGameConnection } from './p2pConnection';
 import { songManager } from './songManager';
 
+// (globals such as translations, preferredLanguage remain on window for legacy code)
 export type LegacyGameHandle = {
   destroy: () => void;
   game: any | null;
@@ -277,8 +280,8 @@ export function loadLegacyGame(): LegacyGameHandle {
   void _socketServer;
 
   // initialization that used to run on DOMContentLoaded
-  game = new (window as any).Game();
-  p2pConnection = new (window as any).P2PGameConnection(game);
+  game = new Game();
+  p2pConnection = new P2PGameConnection(game);
   p2pConnection.interceptGameActions();
 
   async function getSwears(language: string) {
