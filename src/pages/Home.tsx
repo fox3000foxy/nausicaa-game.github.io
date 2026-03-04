@@ -1,9 +1,27 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useLayoutEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useLegacyScripts } from '../hooks/useLegacyScripts';
+import { initWobbyCorner, type WobbyCornerHandle } from '../utils/wobbyCorner';
 
 const Home: React.FC = () => {
+  console.log('Home component rendering');
+  const wobbyRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { play, playDemo } = useLegacyScripts(navigate);
+
+  useLayoutEffect(() => {
+    let handle: WobbyCornerHandle | null = null;
+    console.log('Home useLayoutEffect, wobbyRef.current =', wobbyRef.current);
+    if (wobbyRef.current) {
+      handle = initWobbyCorner(wobbyRef.current);
+    } else {
+      console.warn('wobbyRef was null when attempting init');
+    }
+    return () => handle?.destroy();
+  }, []);
+
   return (
-    <>
+    <div ref={wobbyRef} style={{ position: 'relative' }}>
       <header>
         <link href="/css/fonts.css" rel="stylesheet" />
         <link href="/css/style.css" rel="stylesheet" />
@@ -93,12 +111,12 @@ const Home: React.FC = () => {
               s'entremêlent
             </p>
             <div className="cta-buttons">
-              <Link to="/app" className="btn primary" data-i18n="play">
+              <button onClick={play} className="btn primary" data-i18n="play">
                 JOUER
-              </Link>
-              <Link to="/demo" className="btn secondary" data-i18n="discover-rules">
+              </button>
+              <button onClick={playDemo} className="btn secondary" data-i18n="discover-rules">
                 DIDACTICIEL
-              </Link>
+              </button>
             </div>
           </div>
           <div className="hero-cards">
@@ -620,7 +638,7 @@ const Home: React.FC = () => {
           <p data-i18n="copyright">© 2025 Nausicaa Game. Tous droits réservés.</p>
         </div>
       </footer>
-    </>
+    </div>
   );
 };
 

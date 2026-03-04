@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { loadLegacyGame, type LegacyGameHandle } from '../utils/legacyGame';
 
 const Game: React.FC = () => {
+  // initialize legacy script once
+  useEffect(() => {
+    const handle: LegacyGameHandle = loadLegacyGame();
+    return () => {
+      handle.destroy();
+    };
+  }, []);
+
   // handlers for a few inline interactions
   const resetScore = () => {
     (window as any).game?.resetScore();
