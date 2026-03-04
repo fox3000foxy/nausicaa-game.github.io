@@ -7,7 +7,6 @@ export interface WobbyCornerHandle {
 }
 
 export function initWobbyCorner(container: HTMLElement): WobbyCornerHandle {
-    console.log("Attaching wobby corner to container", container);
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) {
@@ -49,7 +48,6 @@ export function initWobbyCorner(container: HTMLElement): WobbyCornerHandle {
         private rampDamp = 25;
 
         constructor() {
-            console.log('Initializing wobby to element', container);
             const bumpRadius = 100;
             const halfBumpRadius = bumpRadius / 2;
 
@@ -141,7 +139,6 @@ export function initWobbyCorner(container: HTMLElement): WobbyCornerHandle {
 
     function handleResize() {
         resizeCanvas();
-        console.log('Resized wobby corner canvas to', canvas.width, 'x', canvas.height);
     }
 
     container.addEventListener('resize', handleResize);

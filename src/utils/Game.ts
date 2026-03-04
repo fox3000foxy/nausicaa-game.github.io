@@ -5,9 +5,28 @@
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as arTranslations from '../translations/ar.json';
+import * as deTranslations from '../translations/de.json';
+import * as enTranslations from '../translations/en.json';
+import * as esTranslations from '../translations/es.json';
+import * as frTranslations from '../translations/fr.json';
+import * as itTranslations from '../translations/it.json';
+import * as jaTranslations from '../translations/ja.json';
+import * as ruTranslations from '../translations/ru.json';
+import * as zhTranslations from '../translations/zh.json';
 
-declare const translations: any;
-declare const preferredLanguage: any;
+const translations = {}
+translations['ar'] = arTranslations;
+translations['fr'] = frTranslations;
+translations['de'] = deTranslations;
+translations['en'] = enTranslations;
+translations['es'] = esTranslations;
+translations['it'] = itTranslations;
+translations['ja'] = jaTranslations;
+translations['ru'] = ruTranslations;
+translations['zh'] = zhTranslations;
+
+const preferredLanguage = localStorage.getItem('preferred-language') || navigator.language.split("-")[0] || navigator.userLanguage.split("-")[0] || "en";
 declare const songManager: any;
 declare const CPUPlayer: any;
 
@@ -261,7 +280,7 @@ export class Game {
 
                 cell.dataset.row = row;
                 cell.dataset.col = col;
-                
+
 
                 // Add event listeners for hover effect
                 cell.addEventListener('mouseover', handleCellMouseOver);
@@ -370,7 +389,7 @@ export class Game {
 
     placeUnit(unitType, player, row, col) {
         const randomUUID = () => {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 const r = Math.random() * 16 | 0;
                 const v = c === 'x' ? r : (r & 0x3 | 0x8);
                 return v.toString(16);
@@ -394,13 +413,13 @@ export class Game {
         if (unitType === 'oracle') {
             if (player === 1) {
                 songManager.playSong('oraclePut', true);
-                songManager.setVolume("oraclePut",0.3)
+                songManager.setVolume("oraclePut", 0.3)
             }
             else {
                 songManager.playSong('oraclePut', true);
-                songManager.setVolume("oraclePut",0.3)
+                songManager.setVolume("oraclePut", 0.3)
                 songManager.playSong('announcer:battleBegins', true);
-                if(!window.demoMode) 
+                if (!window.demoMode)
                     songManager.transitionSong("firstRound", "menu_next", true)
                 else
                     songManager.stopSong("firstRound")
@@ -485,56 +504,56 @@ export class Game {
         document.getElementById('game-board').addEventListener('mousedown', (e) => {
             // Only allow drag when it's the current player's turn
             if (this.gameOver) return;
-            if (p2pConnection?.gameId && ((this.currentPlayer === 1 && !p2pConnection.isHost) || 
+            if (p2pConnection?.gameId && ((this.currentPlayer === 1 && !p2pConnection.isHost) ||
                 (this.currentPlayer === 2 && p2pConnection.isHost))) {
                 return;
             }
             if (this.currentPlayer === 2 && this.cpuMode) {
                 return;
             }
-    
+
             const unitElement = e.target.closest('.unit');
             if (!unitElement) return;
-    
+
             const cell = unitElement.closest('.board-cell');
             if (!cell) return;
-    
+
             const row = parseInt(cell.dataset.row);
             const col = parseInt(cell.dataset.col);
-            
+
             // Check if this is the current player's unit
             const unit = this.board[row][col];
             if (!unit || unit.player !== this.currentPlayer) return;
-    
+
             // Prevent default to disable text selection
             e.preventDefault();
-            
+
             // Track if we're actually dragging or just clicking
             let isDragging = false;
             const dragStartX = e.clientX;
             const dragStartY = e.clientY;
-            
+
             // Select the unit first to calculate valid moves and attacks
             this.selectUnit(unitElement, row, col);
-            
+
             // Valid actions check
             const canMove = (!unit.hasMoved && !unit.justSpawned) && this.validMoves.length > 0;
-            const canAttack = (!unit.hasAttacked && UNITS[unit.type].attack !== 'none' && 
-                              this.players[this.currentPlayer].mana >= 1) && 
-                              this.validAttacks.length > 0;
-            const canDash = (unit.hasMoved && !unit.hasAttacked && !unit.hasDashed && 
-                            !unit.justSpawned && this.players[this.currentPlayer].mana >= 1 && 
-                            UNITS[unit.type].movement !== 'none') && 
-                            this.validMoves.length > 0;
-            
+            const canAttack = (!unit.hasAttacked && UNITS[unit.type].attack !== 'none' &&
+                this.players[this.currentPlayer].mana >= 1) &&
+                this.validAttacks.length > 0;
+            const canDash = (unit.hasMoved && !unit.hasAttacked && !unit.hasDashed &&
+                !unit.justSpawned && this.players[this.currentPlayer].mana >= 1 &&
+                UNITS[unit.type].movement !== 'none') &&
+                this.validMoves.length > 0;
+
             // Only proceed if the unit can take some action
             if (!canMove && !canAttack && !canDash) {
                 return;
             }
-                
+
             // Determine the current action type
             let isAttacking = false;
-            
+
             if (canAttack && this.validAttacks.length > 0) {
                 this.selectedAction = 'attack';
                 isAttacking = true;
@@ -543,7 +562,7 @@ export class Game {
                 this.selectedAction = canDash ? 'dash' : 'move';
                 this.highlightValidMoves();
             }
-            
+
             // Create the drag image in advance but don't show it
             const dragImage = unitElement.cloneNode(true);
             dragImage.id = 'drag-image';
@@ -552,84 +571,84 @@ export class Game {
             dragImage.style.pointerEvents = 'none';
             dragImage.style.zIndex = '1000';
             document.body.appendChild(dragImage);
-            
+
             // Calculate offset
             const rect = unitElement.getBoundingClientRect();
             const offsetX = dragStartX - rect.left;
             const offsetY = dragStartY - rect.top;
-            
+
             // Function to start the drag
             const startDrag = (e) => {
                 isDragging = true;
-                
+
                 // Now show and position the drag image
                 dragImage.style.opacity = '0.7';
                 dragImage.style.left = (e.clientX - offsetX) + 'px';
                 dragImage.style.top = (e.clientY - offsetY) + 'px';
-                
+
                 // Mark the original unit as dragging
                 unitElement.classList.add('dragging');
             };
-            
+
             // Move function for the drag image
             const moveAt = (pageX, pageY) => {
                 dragImage.style.left = (pageX - offsetX) + 'px';
                 dragImage.style.top = (pageY - offsetY) + 'px';
             };
-            
+
             // Mouse move handler for drag detection and movement
             const onMouseMove = (e) => {
                 // Check if we should start dragging
                 if (!isDragging) {
                     const deltaX = Math.abs(e.clientX - dragStartX);
                     const deltaY = Math.abs(e.clientY - dragStartY);
-                    
+
                     // If moved more than this threshold, start dragging
                     if (deltaX > 3 || deltaY > 3) {
                         startDrag(e);
                     }
                     return;
                 }
-                
+
                 // If already dragging, move the drag image
                 moveAt(e.clientX, e.clientY);
-                
+
                 // Get element under the drag image for drop highlighting
                 dragImage.style.display = 'none'; // Temporarily hide the drag image
                 const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
                 dragImage.style.display = ''; // Show the drag image again
-                
+
                 if (!elemBelow) return;
-                
+
                 const cellBelow = elemBelow.closest('.board-cell');
                 if (!cellBelow) return;
-                
+
                 // Determine if cell is a valid target
                 const targetRow = parseInt(cellBelow.dataset.row);
                 const targetCol = parseInt(cellBelow.dataset.col);
-                
+
                 let isValidTarget = false;
-                
+
                 if (isAttacking) {
                     // Check if it's a valid attack target
-                    isValidTarget = this.validAttacks.some(attack => 
+                    isValidTarget = this.validAttacks.some(attack =>
                         attack.row === targetRow && attack.col === targetCol
                     );
-                    
+
                     if (isValidTarget) {
                         cellBelow.classList.add('drop-target', 'attack-target');
                     }
                 } else {
                     // Check if it's a valid move target
-                    isValidTarget = this.validMoves.some(move => 
+                    isValidTarget = this.validMoves.some(move =>
                         move.row === targetRow && move.col === targetCol
                     );
-                    
+
                     if (isValidTarget) {
                         cellBelow.classList.add('drop-target');
                     }
                 }
-                
+
                 // Remove drop highlight from other cells
                 document.querySelectorAll('.board-cell.drop-target').forEach(cell => {
                     if (cell !== cellBelow) {
@@ -637,48 +656,48 @@ export class Game {
                     }
                 });
             };
-            
+
             // Mouse up handler
             const onMouseUp = (e) => {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
-                
+
                 // Remove drag image
                 if (dragImage.parentNode) {
                     dragImage.parentNode.removeChild(dragImage);
                 }
-                
+
                 unitElement.classList.remove('dragging');
-                
+
                 // If we never started dragging, treat as a normal click
                 if (!isDragging) {
                     // The click event will handle selection
                     return;
                 }
-                
+
                 // Get drop target
                 const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
                 if (!elemBelow) return;
-                
+
                 const cellBelow = elemBelow.closest('.board-cell');
                 if (!cellBelow) return;
-                
+
                 // Get target position
                 const targetRow = parseInt(cellBelow.dataset.row);
                 const targetCol = parseInt(cellBelow.dataset.col);
-                
+
                 // Remove all drop highlights
                 document.querySelectorAll('.board-cell.drop-target').forEach(cell => {
                     cell.classList.remove('drop-target', 'attack-target');
                 });
-                
+
                 // Execute the appropriate action based on the target
                 if (isAttacking) {
                     // Check if it's a valid attack target
-                    const isValidAttack = this.validAttacks.some(attack => 
+                    const isValidAttack = this.validAttacks.some(attack =>
                         attack.row === targetRow && attack.col === targetCol
                     );
-                    
+
                     if (isValidAttack) {
                         // Execute attack
                         songManager.playSong('attack');
@@ -686,15 +705,15 @@ export class Game {
                     }
                 } else {
                     // Check if it's a valid move target
-                    const isValidMove = this.validMoves.some(move => 
+                    const isValidMove = this.validMoves.some(move =>
                         move.row === targetRow && move.col === targetCol
                     );
-                    
+
                     if (isValidMove) {
                         // Execute move
                         songManager.playSong('clic');
                         this.moveUnit(targetRow, targetCol);
-                        
+
                         // If this was a dash action, mark the unit and end turn
                         if (this.selectedAction === 'dash') {
                             const movedUnit = this.board[targetRow][targetCol];
@@ -709,7 +728,7 @@ export class Game {
                     }
                 }
             };
-            
+
             // Listen to mouse events
             document.addEventListener('mousemove', onMouseMove);
             document.addEventListener('mouseup', onMouseUp);
@@ -724,7 +743,7 @@ export class Game {
             return;
         }
 
-        if(this.currentPlayer === 2 && this.cpuMode) {
+        if (this.currentPlayer === 2 && this.cpuMode) {
             return;
         }
 
@@ -855,7 +874,7 @@ export class Game {
 
         // Highlight valid spawn locations
         this.highlightValidSpawnLocations();
-        this.updateActionText(translations[preferredLanguage]['select_spawn'] + ` ${translations[preferredLanguage][unitType+"_name"]}`);
+        this.updateActionText(translations[preferredLanguage]['select_spawn'] + ` ${translations[preferredLanguage][unitType + "_name"]}`);
     }
 
     selectUnit(unitElement, row, col) {
@@ -1114,17 +1133,17 @@ export class Game {
             case 'zombie_move':
                 const direction2 = unit.player === 1 ? -1 : 1;
                 const attackDirections = [{
-                        r: direction2,
-                        c: -1
-                    }, // Forward-Left
-                    {
-                        r: direction2,
-                        c: 0
-                    }, // Forward
-                    {
-                        r: direction2,
-                        c: 1
-                    }, // Forward-Right
+                    r: direction2,
+                    c: -1
+                }, // Forward-Left
+                {
+                    r: direction2,
+                    c: 0
+                }, // Forward
+                {
+                    r: direction2,
+                    c: 1
+                }, // Forward-Right
                 ];
 
                 attackDirections.forEach(dir => {
@@ -1211,21 +1230,21 @@ export class Game {
 
             case 'hop2': // Griffin's 2-square hop
                 const hopDirections = [{
-                        r: -2,
-                        c: 0
-                    }, // Up 2
-                    {
-                        r: 2,
-                        c: 0
-                    }, // Down 2
-                    {
-                        r: 0,
-                        c: -2
-                    }, // Left 2
-                    {
-                        r: 0,
-                        c: 2
-                    } // Right 2
+                    r: -2,
+                    c: 0
+                }, // Up 2
+                {
+                    r: 2,
+                    c: 0
+                }, // Down 2
+                {
+                    r: 0,
+                    c: -2
+                }, // Left 2
+                {
+                    r: 0,
+                    c: 2
+                } // Right 2
                 ];
 
                 hopDirections.forEach(dir => {
@@ -1243,33 +1262,33 @@ export class Game {
 
             case 'knight': // Chess knight L-shape
                 const knightMoves = [{
-                        r: -2,
-                        c: -1
-                    }, {
-                        r: -2,
-                        c: 1
-                    },
-                    {
-                        r: -1,
-                        c: -2
-                    }, {
-                        r: -1,
-                        c: 2
-                    },
-                    {
-                        r: 1,
-                        c: -2
-                    }, {
-                        r: 1,
-                        c: 2
-                    },
-                    {
-                        r: 2,
-                        c: -1
-                    }, {
-                        r: 2,
-                        c: 1
-                    }
+                    r: -2,
+                    c: -1
+                }, {
+                    r: -2,
+                    c: 1
+                },
+                {
+                    r: -1,
+                    c: -2
+                }, {
+                    r: -1,
+                    c: 2
+                },
+                {
+                    r: 1,
+                    c: -2
+                }, {
+                    r: 1,
+                    c: 2
+                },
+                {
+                    r: 2,
+                    c: -1
+                }, {
+                    r: 2,
+                    c: 1
+                }
                 ];
 
                 knightMoves.forEach(move => {
@@ -1334,21 +1353,21 @@ export class Game {
 
             case 'lateral4': // Attack in 4 lateral directions
                 const lateralDirections = [{
-                        r: -1,
-                        c: 0
-                    }, // Up
-                    {
-                        r: 1,
-                        c: 0
-                    }, // Down
-                    {
-                        r: 0,
-                        c: -1
-                    }, // Left
-                    {
-                        r: 0,
-                        c: 1
-                    } // Right
+                    r: -1,
+                    c: 0
+                }, // Up
+                {
+                    r: 1,
+                    c: 0
+                }, // Down
+                {
+                    r: 0,
+                    c: -1
+                }, // Left
+                {
+                    r: 0,
+                    c: 1
+                } // Right
                 ];
 
                 lateralDirections.forEach(dir => {
@@ -1368,21 +1387,21 @@ export class Game {
 
             case 'diagonal4': // Attack in 4 diagonal directions
                 const diagonalDirections = [{
-                        r: -1,
-                        c: -1
-                    }, // Top-left
-                    {
-                        r: -1,
-                        c: 1
-                    }, // Top-right
-                    {
-                        r: 1,
-                        c: -1
-                    }, // Bottom-left
-                    {
-                        r: 1,
-                        c: 1
-                    } // Bottom-right
+                    r: -1,
+                    c: -1
+                }, // Top-left
+                {
+                    r: -1,
+                    c: 1
+                }, // Top-right
+                {
+                    r: 1,
+                    c: -1
+                }, // Bottom-left
+                {
+                    r: 1,
+                    c: 1
+                } // Bottom-right
                 ];
 
                 diagonalDirections.forEach(dir => {
@@ -1402,19 +1421,19 @@ export class Game {
 
             case 'diagonal3': // Archer's 3-square diagonal attack
                 const arrowDirections = [{
-                        r: -1,
-                        c: -1
-                    }, {
-                        r: -1,
-                        c: 1
-                    },
-                    {
-                        r: 1,
-                        c: -1
-                    }, {
-                        r: 1,
-                        c: 1
-                    }
+                    r: -1,
+                    c: -1
+                }, {
+                    r: -1,
+                    c: 1
+                },
+                {
+                    r: 1,
+                    c: -1
+                }, {
+                    r: 1,
+                    c: 1
+                }
                 ];
 
                 arrowDirections.forEach(dir => {
@@ -1479,17 +1498,17 @@ export class Game {
             case 'zombie_attack':
                 const direction = unit.player === 1 ? -1 : 1;
                 const attackDirections = [{
-                        r: direction,
-                        c: -1
-                    }, // Forward-Left
-                    {
-                        r: direction,
-                        c: 0
-                    }, // Forward
-                    {
-                        r: direction,
-                        c: 1
-                    }, // Forward-Right
+                    r: direction,
+                    c: -1
+                }, // Forward-Left
+                {
+                    r: direction,
+                    c: 0
+                }, // Forward
+                {
+                    r: direction,
+                    c: 1
+                }, // Forward-Right
                 ];
 
                 attackDirections.forEach(dir => {
@@ -1984,7 +2003,7 @@ export class Game {
         document.getElementById('turn-indicator').textContent = `${translations[preferredLanguage]['turn']} ${this.turn} - ${translations[preferredLanguage]['player']} ${this.currentPlayer}`;
         this.highlightCurrentPlayer();
         if (this.timerMode && !this.gameOver) {
-            if(this.players[2].units.find(u=>u.unit.type=="oracle")) {
+            if (this.players[2].units.find(u => u.unit.type == "oracle")) {
                 // check both of oracles are present before starting timer
                 this.startTurnTimer();
                 console.log("oracle2 is present, starting timer")
@@ -1993,16 +2012,16 @@ export class Game {
     }
 
     resetGame() {
-        if(!window.demoMode)
+        if (!window.demoMode)
             songManager.stopSong("menu_next")
         songManager.stopSong("victory")
         songManager.stopSong("defeat")
 
         songManager.playSong("announcer:allPick", true)
-        
-        if(!window.demoMode)
+
+        if (!window.demoMode)
             songManager.playSong("firstRound", true)
-        songManager.setVolume("firstRound",0.2)
+        songManager.setVolume("firstRound", 0.2)
         // songManager.transitionSong("victory","firstRound", true)
 
         // Reinitialize the game
@@ -2023,9 +2042,9 @@ export class Game {
         // Update UI
         this.updateGameUI();
         this.updateActionText(translations[preferredLanguage]['new_game_started']);
-        
+
         this.stopTurnTimer();
-        
+
         document.getElementById("timer-display").style.display = "none";
         document.querySelector(".timer").style.display = '';
         document.querySelector(".cpu-mode").style.display = '';
@@ -2286,7 +2305,7 @@ export class Game {
         // Enable/disable end turn buttons
         document.getElementById('end-turn-one').disabled = this.currentPlayer !== 1 || this.gameOver;
         document.getElementById('end-turn-two').disabled = this.currentPlayer !== 2 || this.gameOver || this.cpuMode;
-        
+
         // Update unit cursor styles based on current player and unit state
         document.querySelectorAll('.unit').forEach(unitElement => {
             const cell = unitElement.closest('.board-cell');
@@ -2294,7 +2313,7 @@ export class Game {
                 const row = parseInt(cell.dataset.row);
                 const col = parseInt(cell.dataset.col);
                 const unit = this.board[row][col];
-                
+
                 if (unit && unit.player === this.currentPlayer && !unit.hasMoved && !unit.justSpawned) {
                     unitElement.style.cursor = 'grab';
                 } else {
@@ -2302,7 +2321,7 @@ export class Game {
                 }
             }
         });
-        
+
         this.highlightCurrentPlayer();
     }
 
@@ -2372,14 +2391,14 @@ export class Game {
             // Add hover functionality for each card
             let hoverTimer = null;
             let hoverDelay = 750;
-            
+
             card.addEventListener('mouseover', (e) => {
                 clearTimeout(hoverTimer);
                 hoverTimer = setTimeout(() => {
                     this.showUnitCardPreview(unitType, e.clientX, e.clientY);
                 }, hoverDelay);
             });
-            
+
             card.addEventListener('mouseout', () => {
                 clearTimeout(hoverTimer);
                 this.hideUnitCardPreview();
@@ -2473,7 +2492,7 @@ export class Game {
 
             if (actions.length > 0) {
                 actionText = `${UNITS[unit.type].name} ${translations[preferredLanguage]['can']} ` + actions.join(" " + translations[preferredLanguage]['or'] + " ") + '.';
-            } else { 
+            } else {
                 actionText = `${UNITS[unit.type].name} ${translations[preferredLanguage]['has_acted_this_turn']}.`;
             }
         }
@@ -2611,21 +2630,21 @@ export class Game {
 
             case 'hop2': // Griffin's 2-square hop
                 const hopDirections = [{
-                        r: -2,
-                        c: 0
-                    }, // Up 2
-                    {
-                        r: 2,
-                        c: 0
-                    }, // Down 2
-                    {
-                        r: 0,
-                        c: -2
-                    }, // Left 2
-                    {
-                        r: 0,
-                        c: 2
-                    } // Right 2
+                    r: -2,
+                    c: 0
+                }, // Up 2
+                {
+                    r: 2,
+                    c: 0
+                }, // Down 2
+                {
+                    r: 0,
+                    c: -2
+                }, // Left 2
+                {
+                    r: 0,
+                    c: 2
+                } // Right 2
                 ];
 
                 hopDirections.forEach(dir => {
@@ -2643,33 +2662,33 @@ export class Game {
 
             case 'knight': // Chess knight L-shape
                 const knightMoves = [{
-                        r: -2,
-                        c: -1
-                    }, {
-                        r: -2,
-                        c: 1
-                    },
-                    {
-                        r: -1,
-                        c: -2
-                    }, {
-                        r: -1,
-                        c: 2
-                    },
-                    {
-                        r: 1,
-                        c: -2
-                    }, {
-                        r: 1,
-                        c: 2
-                    },
-                    {
-                        r: 2,
-                        c: -1
-                    }, {
-                        r: 2,
-                        c: 1
-                    }
+                    r: -2,
+                    c: -1
+                }, {
+                    r: -2,
+                    c: 1
+                },
+                {
+                    r: -1,
+                    c: -2
+                }, {
+                    r: -1,
+                    c: 2
+                },
+                {
+                    r: 1,
+                    c: -2
+                }, {
+                    r: 1,
+                    c: 2
+                },
+                {
+                    r: 2,
+                    c: -1
+                }, {
+                    r: 2,
+                    c: 1
+                }
                 ];
 
                 knightMoves.forEach(move => {
@@ -2736,9 +2755,9 @@ export class Game {
 
                 cell.dataset.row = row;
                 cell.dataset.col = col;
-                
+
                 cell.addEventListener('click', (e) => this.handleCellClick(e));
-                
+
                 boardElement.appendChild(cell);
 
                 const unit = this.board[row][col];
@@ -2781,9 +2800,9 @@ export class Game {
             unitElement.addEventListener('mouseover', (e) => {
                 handleCellMouseOver(e, e.target.parentElement)
             });
-            
+
             unitElement.addEventListener('mouseout', (e) => {
-                handleCellMouseOut(e, e.target.parentElement)                
+                handleCellMouseOut(e, e.target.parentElement)
             });
 
             cell.appendChild(unitElement);
@@ -2874,24 +2893,24 @@ export class Game {
     showUnitCardPreview(unitType, x, y) {
         const unitData = UNITS[unitType];
         if (!unitData) return;
-    
+
         // Remove any existing preview
         this.hideUnitCardPreview();
-        
+
         // Create card preview container
         const preview = document.createElement('div');
         preview.id = 'unit-card-preview';
         preview.className = 'unit-card';
-        
+
         // Get translated movement and attack types
         const movementText = translations[preferredLanguage][`${unitData.movement}_movement`] || unitData.movement;
         const attackText = translations[preferredLanguage][`${unitData.attack}_attack`] || unitData.attack;
         let abilityText = '';
-        
+
         if (unitData.ability) {
             abilityText = translations[preferredLanguage][`${unitData.ability}_ability`] || unitData.ability;
         }
-        
+
         // Add card content
         preview.innerHTML = `
             <div class="unit-image">
@@ -2904,7 +2923,7 @@ export class Game {
             </div>
             <p class="unit-desc">${unitData.description}</p>
         `;
-        
+
         // Add styling
         Object.assign(preview.style, {
             backgroundColor: 'var(--background-light)',
@@ -2919,18 +2938,18 @@ export class Game {
             opacity: '0',
             transition: 'opacity 0.3s ease',
             position: 'fixed',
-            zIndex: '1000', 
+            zIndex: '1000',
             // top: y +'5',
             // left: 5 + '5',
             pointerEvents: 'none'
         });
-        
+
         // Add to document
         document.body.appendChild(preview);
-        
+
         // Position the preview to avoid being cut off by viewport edges
         const rect = preview.getBoundingClientRect();
-        
+
         // Check left edge
         if (x - rect.width / 2 < 0) {
             preview.style.left = '10px'; // Stick to the left edge with a small margin
@@ -2948,7 +2967,7 @@ export class Game {
         } else {
             preview.style.top = `${y - rect.height / 2}px`; // Center the preview vertically
         }
-        
+
         // Fade in effect
         requestAnimationFrame(() => {
             preview.style.opacity = '1';
