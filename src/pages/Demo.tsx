@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const Demo: React.FC = () => {
   const resetScore = () => {
     (window as any).game?.resetScore();
   };
+
+  useEffect(() => {
+    import('../utils/tutorial').then(mod => {
+      mod.startTutorial();
+    });
+  }, []);
 
   return (
     <>

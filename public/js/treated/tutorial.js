@@ -17,19 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let step = 0;
     let steps = [];
-    const lang = window.preferredLanguage || 'en';
+    const lang = (window).preferredLanguage || 'en';
     fetch(`/data/translations/tutorial/${lang}.json`)
-        .then(r => r.json())
-        .then(data => {
-            steps = data;
-            showTutorialStep(step);
-            game.cpuMode = true;
-            songManager.playSong('menu_next');
-            window.demoMode = true;
-        })
-        .catch(err => {
-            console.error('Failed to load tutorial steps', err);
-        });
+      .then(r => r.json())
+      .then(data => {
+        steps = data;
+        showTutorialStep(step);
+        game.cpuMode = true;
+        songManager.playSong('menu_next');
+        window.demoMode = true;
+      })
+      .catch(err => {
+        console.error('Failed to load tutorial steps', err);
+      });
 
     function showTutorialStep(stepIndex) {
         const stepObj = steps[stepIndex];
