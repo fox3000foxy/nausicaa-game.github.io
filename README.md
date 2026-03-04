@@ -198,6 +198,24 @@ Eliminate the opponent's **Oracle** (King equivalent) to win the game.
   <img src="./assets/hero.png" width="500" alt="Nausicaa Hero Image">
 </p> -->
 
+---
+
+## Migration to React + Vite
+
+The legacy static site lives in the `legacy/` folder. Work is in progress to convert each
+HTML page and accompanying scripts into React components under `src/`.
+
+### Quickstart
+
+```sh
+pnpm install
+pnpm run dev        # start dev server on http://localhost:5173
+pnpm run build      # produce production bundle in ./dist
+```
+
+Assets such as images, fonts and audio can be kept in `public/assets/` and referenced
+from React code. Feel free to consult files in `legacy/` when porting behaviour.
+
 ## ✨ Feature Highlights
 
 <div align="center">
