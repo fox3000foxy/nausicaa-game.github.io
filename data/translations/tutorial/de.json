@@ -1,0 +1,47 @@
+[
+  {
+    "title": "Willkommen bei Nausicaa!",
+    "text": "Dieses Tutorial führt dich durch die Grundlagen des Spiels.",
+    "highlight": null
+  },
+  {
+    "title": "Deine Hand",
+    "text": "Hier siehst du die Karten in deiner Hand. Jede Karte repräsentiert eine Einheit, die du auf das Spielbrett beschwören kannst.",
+    "highlight": "player-one-hand"
+  },
+  {
+    "title": "Das Spielbrett",
+    "text": "Dies ist das Spielbrett. Du kannst deine Einheiten in deiner Aufstellungszone platzieren (die unteren beiden Reihen).",
+    "highlight": "game-board"
+  },
+  {
+    "title": "Einheiteninformationen",
+    "text": "Klicke auf eine Einheit auf dem Spielbrett, um ihre Details hier anzuzeigen.",
+    "highlight": "unit-info"
+  },
+  {
+    "title": "Mana",
+    "text": "Mana wird benötigt, um Einheiten zu beschwören und Aktionen durchzuführen. Es steigt jede Runde um 1, bis zu einem Maximum von 6.",
+    "highlight": "player-one-mana"
+  },
+  {
+    "title": "Punktzahl",
+    "text": "Die Punktzahl wird hier angezeigt. Sie erhöht sich, wenn du feindliche Einheiten zerstörst.",
+    "highlight": "score-display"
+  },
+  {
+    "title": "Zug beenden",
+    "text": "Um deinen Zug zu beenden, klicke auf diese Schaltfläche.",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "Gegnerischer Zug",
+    "text": "Während des Zuges deines Gegners musst du warten.",
+    "highlight": "end-turn-two"
+  },
+  {
+    "title": "Ziel",
+    "text": "Das Ziel des Spiels ist es, das gegnerische Orakel zu eliminieren. Viel Glück!",
+    "highlight": null
+  }
+]

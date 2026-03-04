@@ -1,0 +1,47 @@
+[
+  {
+    "title": "欢迎来到娜乌西卡！",
+    "text": "本教程将引导您了解游戏的基础知识。",
+    "highlight": null
+  },
+  {
+    "title": "你的手牌",
+    "text": "在这里，您可以看到手中的卡牌。每张卡牌代表一个您可以召唤到棋盘上的单位。",
+    "highlight": "player-one-hand"
+  },
+  {
+    "title": "游戏棋盘",
+    "text": "这是游戏棋盘。您可以将您的单位放置在您的部署区域（底部两行）。",
+    "highlight": "game-board"
+  },
+  {
+    "title": "单位信息",
+    "text": "单击棋盘上的单位以在此处查看其详细信息。",
+    "highlight": "unit-info"
+  },
+  {
+    "title": "法力",
+    "text": "召唤单位和执行动作需要法力。它每回合增加 1，最多增加到 6。",
+    "highlight": "player-one-mana"
+  },
+  {
+    "title": "分数",
+    "text": "分数显示在这里。当您摧毁敌方单位时，它会增加。",
+    "highlight": "score-display"
+  },
+  {
+    "title": "结束回合",
+    "text": "要结束您的回合，请单击此按钮。",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "对手的回合",
+    "text": "在对手的回合中，您将需要等待。",
+    "highlight": "end-turn-two"
+  },
+  {
+    "title": "目标",
+    "text": "游戏的目标是消灭对方的预言者。祝你好运！",
+    "highlight": null
+  }
+]

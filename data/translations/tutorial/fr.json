@@ -1,0 +1,47 @@
+[
+  {
+    "title": "Bienvenue dans Nausicaa !",
+    "text": "Ce didacticiel vous guidera à travers les bases du jeu.",
+    "highlight": null
+  },
+  {
+    "title": "Votre Main",
+    "text": "Ici, vous voyez les cartes dans votre main. Chaque carte représente une unité que vous pouvez invoquer sur le plateau.",
+    "highlight": "player-one-hand"
+  },
+  {
+    "title": "Le Plateau de Jeu",
+    "text": "Ceci est le plateau de jeu. Vous pouvez placer vos unités dans votre zone de déploiement (les deux rangées du bas).",
+    "highlight": "game-board"
+  },
+  {
+    "title": "Information sur l'unité",
+    "text": "Cliquez sur une unité sur le plateau pour voir ses détails ici.",
+    "highlight": "unit-info"
+  },
+  {
+    "title": "Mana",
+    "text": "Le mana est nécessaire pour invoquer des unités et effectuer des actions. Il augmente de 1 à chaque tour, jusqu'à un maximum de 6.",
+    "highlight": "player-one-mana"
+  },
+  {
+    "title": "Terminer le tour",
+    "text": "Pour passer votre tour, cliquez sur ce bouton.",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "Score",
+    "text": "Le score est affiché ici. Il augmente lorsque vous détruisez des unités ennemies.",
+    "highlight": "score-display"
+  },
+  {
+    "title": "Terminer le tour",
+    "text": "Pour passer votre tour, cliquez sur ce bouton.",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "Objectif",
+    "text": "L'objectif du jeu est d'éliminer l'Oracle adverse. Bonne chance !",
+    "highlight": null
+  }
+]

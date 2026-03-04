@@ -1,0 +1,47 @@
+[
+  {
+    "title": "Welcome to Nausicaa!",
+    "text": "This tutorial will guide you through the basics of the game.",
+    "highlight": null
+  },
+  {
+    "title": "Your Hand",
+    "text": "Here you see the cards in your hand. Each card represents a unit you can summon onto the board.",
+    "highlight": "player-one-hand"
+  },
+  {
+    "title": "The Game Board",
+    "text": "This is the game board. You can place your units in your deployment zone (the bottom two rows).",
+    "highlight": "game-board"
+  },
+  {
+    "title": "Unit Information",
+    "text": "Click on a unit on the board to see its details here.",
+    "highlight": "unit-info"
+  },
+  {
+    "title": "Mana",
+    "text": "Mana is needed to summon units and perform actions. It increases by 1 each turn, up to a maximum of 6.",
+    "highlight": "player-one-mana"
+  },
+  {
+    "title": "Score",
+    "text": "The score is displayed here. It increases when you destroy enemy units.",
+    "highlight": "score-display"
+  },
+  {
+    "title": "End Turn",
+    "text": "To end your turn, click this button.",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "Opponent's Turn",
+    "text": "During your opponent's turn, you will have to wait.",
+    "highlight": "end-turn-two"
+  },
+  {
+    "title": "Objective",
+    "text": "The objective of the game is to eliminate the opposing Oracle. Good luck!",
+    "highlight": null
+  }
+]

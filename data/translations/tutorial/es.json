@@ -1,0 +1,47 @@
+[
+  {
+    "title": "¡Bienvenido a Nausicaa!",
+    "text": "Este tutorial te guiará a través de los conceptos básicos del juego.",
+    "highlight": null
+  },
+  {
+    "title": "Tu Mano",
+    "text": "Aquí ves las cartas en tu mano. Cada carta representa una unidad que puedes invocar en el tablero.",
+    "highlight": "player-one-hand"
+  },
+  {
+    "title": "El Tablero de Juego",
+    "text": "Este es el tablero de juego. Puedes colocar tus unidades en tu zona de despliegue (las dos filas inferiores).",
+    "highlight": "game-board"
+  },
+  {
+    "title": "Información de la Unidad",
+    "text": "Haz clic en una unidad en el tablero para ver sus detalles aquí.",
+    "highlight": "unit-info"
+  },
+  {
+    "title": "Maná",
+    "text": "Se necesita maná para invocar unidades y realizar acciones. Aumenta en 1 cada turno, hasta un máximo de 6.",
+    "highlight": "player-one-mana"
+  },
+  {
+    "title": "Puntuación",
+    "text": "La puntuación se muestra aquí. Aumenta cuando destruyes unidades enemigas.",
+    "highlight": "score-display"
+  },
+  {
+    "title": "Terminar Turno",
+    "text": "Para terminar tu turno, haz clic en este botón.",
+    "highlight": "end-turn-one"
+  },
+  {
+    "title": "Turno del Oponente",
+    "text": "Durante el turno de tu oponente, tendrás que esperar.",
+    "highlight": "end-turn-two"
+  },
+  {
+    "title": "Objetivo",
+    "text": "El objetivo del juego es eliminar al Oráculo contrario. ¡Buena suerte!",
+    "highlight": null
+  }
+]
