@@ -14,6 +14,7 @@ import * as jaTranslations from '../translations/ja.json';
 import * as ruTranslations from '../translations/ru.json';
 import * as zhTranslations from '../translations/zh.json';
 import { loadLegacyGame, type LegacyGameHandle } from './legacyGame';
+import { P2PGameConnection } from './p2pConnection';
 
 const translations: { [key: string]: any } = {};
 translations['ar'] = arTranslations;
@@ -26,9 +27,14 @@ translations['ja'] = jaTranslations;
 translations['ru'] = ruTranslations;
 translations['zh'] = zhTranslations;
 
-const preferredLanguage = localStorage.getItem('preferred-language') || navigator.language.split("-")[0] || navigator.userLanguage.split("-")[0] || "en";
+const preferredLanguage = localStorage.getItem('preferred-language') || navigator.language.split("-")[0] || (navigator.languages?.[0]?.split("-")[0]) || "en";
 declare const songManager: any;
 declare const CPUPlayer: any;
+declare global {
+    interface Window {
+        demoMode: boolean;
+    }
+}
 
 // placeholder for global game class if needed elsewhere
 // (we export our own Game class below)
@@ -172,7 +178,8 @@ export class Game {
     validMoves: any[];
     validAttacks: any[];
     movedUnitThisTurn: any;
-    board: any[][] | null;
+    board: any[][] = Array(BOARD_ROWS).fill(null).map(() => Array(BOARD_COLS).fill(null));
+    p2pConnection: P2PGameConnection;
 
     players: {
         [key: number]: {
@@ -223,9 +230,10 @@ export class Game {
                 units: [],
                 wins: 0
             }
-        }
-        // this.board = Array(BOARD_ROWS).fill().map(() => Array(BOARD_COLS).fill(null));
-        this.board = null;
+        };
+
+        this.p2pConnection = new P2PGameConnection(); // Access global p2pConnection if it exists
+
     }
 
     setTimerMode(enabled: boolean) {
@@ -316,7 +324,7 @@ export class Game {
         // Create the game board
         const gameBoard = document.getElementById('game-board');
         if (!gameBoard) return;
-        
+
         gameBoard.innerHTML = '';
 
         for (let row = 0; row < BOARD_ROWS; row++) {
@@ -384,9 +392,6 @@ export class Game {
             }
         };
 
-        // Create the game board state (10x8 grid, empty)
-        this.board = Array(BOARD_ROWS).fill(null).map(() => Array(BOARD_COLS).fill(null));
-
         // Draw initial hands, ensuring Oracle is present
         // if(qs.local=="true") {
         this.drawInitialHand(1);
@@ -448,7 +453,7 @@ export class Game {
         }
     }
 
-    placeUnit(unitType: string, player: number, row: string | number, col: string | number) {
+    placeUnit(unitType: string, player: number, row: number, col: number) {
         const randomUUID = () => {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 const r = Math.random() * 16 | 0;
@@ -484,8 +489,8 @@ export class Game {
                     songManager.transitionSong("firstRound", "menu_next", true)
                 else
                     songManager.stopSong("firstRound")
-                if (game.timerMode) {
-                    game.startTurnTimer();
+                if (this.timerMode) {
+                    this.startTurnTimer();
                 }
             }
         }
@@ -565,8 +570,8 @@ export class Game {
         document.getElementById('game-board').addEventListener('mousedown', (e) => {
             // Only allow drag when it's the current player's turn
             if (this.gameOver) return;
-            if (p2pConnection?.gameId && ((this.currentPlayer === 1 && !p2pConnection.isHost) ||
-                (this.currentPlayer === 2 && p2pConnection.isHost))) {
+            if (this.p2pConnection?.gameId && ((this.currentPlayer === 1 && !this.p2pConnection.isHost) ||
+                (this.currentPlayer === 2 && this.p2pConnection.isHost))) {
                 return;
             }
             if (this.currentPlayer === 2 && this.cpuMode) {
@@ -911,8 +916,8 @@ export class Game {
 
         const unitType = cardElement.dataset.type;
         if (unitType === 'oracle') {
-            startGameTheme()
-            if (!p2pConnection.peer) {
+            this.legacyGame.startGameTheme()
+            if (!this.p2pConnection.peer) {
                 document.getElementById('p2p-controls').style.display = "none";
             }
         }
