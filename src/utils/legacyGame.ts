@@ -10,6 +10,8 @@ export type LegacyGameHandle = {
   destroy: () => void;
   game: any | null;
   p2pConnection: any | null;
+  handleCellMouseOver: (event: Event, targetElement?: HTMLElement | null) => void;
+  handleCellMouseOut: (event: Event) => void;
 };
 
 // helper to parse query string into JSON
@@ -314,5 +316,7 @@ export function loadLegacyGame(): LegacyGameHandle {
     },
     game,
     p2pConnection,
+    handleCellMouseOver,
+    handleCellMouseOut,
   };
 }

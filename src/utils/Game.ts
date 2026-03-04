@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Nausicaa - Mythological Strategy Board Game
  * Core game mechanics implementation
@@ -14,8 +13,9 @@ import * as itTranslations from '../translations/it.json';
 import * as jaTranslations from '../translations/ja.json';
 import * as ruTranslations from '../translations/ru.json';
 import * as zhTranslations from '../translations/zh.json';
+import { loadLegacyGame, type LegacyGameHandle } from './legacyGame';
 
-const translations = {}
+const translations: { [key: string]: any } = {};
 translations['ar'] = arTranslations;
 translations['fr'] = frTranslations;
 translations['de'] = deTranslations;
@@ -39,7 +39,7 @@ export const BOARD_COLS = 10;
 export const MAX_MANA = 6;
 
 // Unit definitions with their properties
-const UNITS = {
+const UNITS: { [key: string]: any } = {
     oracle: {
         name: translations[preferredLanguage]['oracle_name'],
         cost: 0,
@@ -160,7 +160,7 @@ export class Game {
     timerMode: boolean;
     cpuMode: boolean;
     timerSeconds: number;
-    turnTimer: number | null;
+    turnTimer: number | undefined;
     cpuPlayer: any;
 
     currentPlayer: number;
@@ -172,28 +172,74 @@ export class Game {
     validMoves: any[];
     validAttacks: any[];
     movedUnitThisTurn: any;
+    board: any[][] | null;
+
+    players: {
+        [key: number]: {
+            mana: number;
+            maxMana: number;
+            deck: string[];
+            hand: string[];
+            units: any[];
+            wins: number;
+        }
+    };
+
+    legacyGame: LegacyGameHandle; // Placeholder for legacy game instance if needed
 
     constructor() {
         this.timerMode = false; // Default: timer mode off
         this.cpuMode = false; // Default: CPU mode off
         this.timerSeconds = 15;
-        this.turnTimer = null;
         this.initializeUI();
         this.initializeGame();
         this.setupEventListeners();
         this.cpuPlayer = new CPUPlayer(this);
+
+        this.legacyGame = loadLegacyGame(); // Load legacy game if needed
+
+        this.currentPlayer = 1; // 1 or 2
+        this.turn = 1;
+        this.gameOver = false;
+        this.selectedCard = null;
+        this.selectedUnit = null;
+        this.selectedAction = null; // 'move', 'attack', 'ability'
+        this.validMoves = [];
+        this.validAttacks = [];
+        this.players = {
+            1: {
+                mana: 1,
+                maxMana: 1,
+                deck: this.generateDeck(),
+                hand: [],
+                units: [],
+                wins: 0
+            },
+            2: {
+                mana: 1,
+                maxMana: 1,
+                deck: this.generateDeck(),
+                hand: [],
+                units: [],
+                wins: 0
+            }
+        }
+        // this.board = Array(BOARD_ROWS).fill().map(() => Array(BOARD_COLS).fill(null));
+        this.board = null;
     }
 
-    setTimerMode(enabled) {
+    setTimerMode(enabled: boolean) {
         this.timerMode = enabled;
     }
 
-    setCpuMode(enabled) {
+    setCpuMode(enabled: boolean) {
         this.cpuMode = enabled;
     }
 
     startTurnTimer() {
-        document.getElementById("timer-display").style.display = "block";
+        const timerDisplay = document.getElementById("timer-display");
+        if (!timerDisplay) return;
+        timerDisplay.style.display = "block";
         this.stopTurnTimer(); // Clear any existing timer
         this.timerSeconds = 15; // Reset timer seconds
         this.updateTimerDisplay(); // Update display immediately
@@ -213,48 +259,64 @@ export class Game {
     stopTurnTimer() {
         if (this.turnTimer) {
             clearTimeout(this.turnTimer);
-            this.turnTimer = null;
+            this.turnTimer = undefined;
         }
     }
 
     initializeUI() {
         // Initialize player info panels
         const playerOneInfo = document.querySelector('.player-area.player-one .player-info .mana-container');
-        playerOneInfo.innerHTML = `
-            <div class="mana-container">${translations[preferredLanguage]['mana']} <span id="player-one-mana">1/1</span></div>
-        `;
+        if (playerOneInfo) {
+            playerOneInfo.innerHTML = `
+                <div class="mana-container">${translations[preferredLanguage]['mana']} <span id="player-one-mana">1/1</span></div>
+            `;
+        }
 
         const playerTwoInfo = document.querySelector('.player-area.player-two .player-info .mana-container');
-        playerTwoInfo.innerHTML = `
-            <div class="mana-container">${translations[preferredLanguage]['mana']} <span id="player-two-mana">1/1</span></div>
-        `;
+        if (playerTwoInfo) {
+            playerTwoInfo.innerHTML = `
+                <div class="mana-container">${translations[preferredLanguage]['mana']} <span id="player-two-mana">1/1</span></div>
+            `;
+        }
 
         // Initialize hand containers
         const playerOneHandContainer = document.querySelector('.player-area.player-one .hand-container');
-        playerOneHandContainer.innerHTML = '<div id="player-one-hand" class="hand"></div>';
+        if (playerOneHandContainer) {
+            playerOneHandContainer.innerHTML = '<div id="player-one-hand" class="hand"></div>';
+        }
 
         const playerTwoHandContainer = document.querySelector('.player-area.player-two .hand-container');
-        playerTwoHandContainer.innerHTML = '<div id="player-two-hand" class="hand"></div>';
+        if (playerTwoHandContainer) {
+            playerTwoHandContainer.innerHTML = '<div id="player-two-hand" class="hand"></div>';
+        }
 
         // Initialize action panels
         const playerOneActionPanel = document.querySelector('.player-area.player-one .action-panel');
-        playerOneActionPanel.innerHTML = `
-            <div id="player-one-action" class="current-action">${translations[preferredLanguage]['select_card']}</div>
-            <button id="end-turn-one" class="btn primary">${translations[preferredLanguage]['end_turn']}</button>
-        `;
+        if (playerOneActionPanel) {
+            playerOneActionPanel.innerHTML = `
+                <div id="player-one-action" class="current-action">${translations[preferredLanguage]['select_card']}</div>
+                <button id="end-turn-one" class="btn primary">${translations[preferredLanguage]['end_turn']}</button>
+            `;
+        }
 
         const playerTwoActionPanel = document.querySelector('.player-area.player-two .action-panel');
-        playerTwoActionPanel.innerHTML = `
-            <div id="player-two-action" class="current-action">${translations[preferredLanguage]['waiting']}</div>
-            <button id="end-turn-two" class="btn primary" disabled>${translations[preferredLanguage]['end_turn']}</button>
-        `;
+        if (playerTwoActionPanel) {
+            playerTwoActionPanel.innerHTML = `
+                <div id="player-two-action" class="current-action">${translations[preferredLanguage]['waiting']}</div>
+                <button id="end-turn-two" class="btn primary" disabled>${translations[preferredLanguage]['end_turn']}</button>
+            `;
+        }
 
         // Initialize unit info panel
         const unitInfoPanel = document.getElementById('unit-info');
-        unitInfoPanel.innerHTML = `<div class="unit-details">${translations[preferredLanguage]['select_unit']}</div>`;
+        if (unitInfoPanel) {
+            unitInfoPanel.innerHTML = `<div class="unit-details">${translations[preferredLanguage]['select_unit']}</div>`;
+        }
 
         // Create the game board
         const gameBoard = document.getElementById('game-board');
+        if (!gameBoard) return;
+        
         gameBoard.innerHTML = '';
 
         for (let row = 0; row < BOARD_ROWS; row++) {
@@ -278,13 +340,12 @@ export class Game {
                     cell.classList.add('player-one-spawn-bottom');
                 }
 
-                cell.dataset.row = row;
-                cell.dataset.col = col;
-
+                cell.dataset.row = row.toString();
+                cell.dataset.col = col.toString();
 
                 // Add event listeners for hover effect
-                cell.addEventListener('mouseover', handleCellMouseOver);
-                cell.addEventListener('mouseout', handleCellMouseOut);
+                cell.addEventListener('mouseover', this.legacyGame.handleCellMouseOver);
+                cell.addEventListener('mouseout', this.legacyGame.handleCellMouseOut);
 
                 gameBoard.appendChild(cell);
             }
@@ -324,7 +385,7 @@ export class Game {
         };
 
         // Create the game board state (10x8 grid, empty)
-        this.board = Array(BOARD_ROWS).fill().map(() => Array(BOARD_COLS).fill(null));
+        this.board = Array(BOARD_ROWS).fill(null).map(() => Array(BOARD_COLS).fill(null));
 
         // Draw initial hands, ensuring Oracle is present
         // if(qs.local=="true") {
@@ -357,7 +418,7 @@ export class Game {
         return this.shuffleArray(deck);
     }
 
-    drawInitialHand(player) {
+    drawInitialHand(player: number) {
         const playerState = this.players[player];
 
         // Draw cards until Oracle is in hand
@@ -368,7 +429,7 @@ export class Game {
         }
     }
 
-    shuffleArray(array) {
+    shuffleArray(array: string[]) {
         const newArray = [...array];
         for (let i = newArray.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -377,17 +438,17 @@ export class Game {
         return newArray;
     }
 
-    drawCards(player, count) {
+    drawCards(player: number, count: number) {
         const playerState = this.players[player];
         for (let i = 0; i < count; i++) {
             if (playerState.deck.length > 0) {
                 const card = playerState.deck.pop();
-                playerState.hand.push(card);
+                playerState.hand.push(card as string);
             }
         }
     }
 
-    placeUnit(unitType, player, row, col) {
+    placeUnit(unitType: string, player: number, row: string | number, col: string | number) {
         const randomUUID = () => {
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
                 const r = Math.random() * 16 | 0;
@@ -578,7 +639,7 @@ export class Game {
             const offsetY = dragStartY - rect.top;
 
             // Function to start the drag
-            const startDrag = (e) => {
+            const startDrag = (e: { clientX: number; clientY: number; }) => {
                 isDragging = true;
 
                 // Now show and position the drag image
@@ -591,13 +652,13 @@ export class Game {
             };
 
             // Move function for the drag image
-            const moveAt = (pageX, pageY) => {
+            const moveAt = (pageX: number, pageY: number) => {
                 dragImage.style.left = (pageX - offsetX) + 'px';
                 dragImage.style.top = (pageY - offsetY) + 'px';
             };
 
             // Mouse move handler for drag detection and movement
-            const onMouseMove = (e) => {
+            const onMouseMove = (e: { clientX: number; clientY: number; }) => {
                 // Check if we should start dragging
                 if (!isDragging) {
                     const deltaX = Math.abs(e.clientX - dragStartX);
@@ -658,7 +719,7 @@ export class Game {
             };
 
             // Mouse up handler
-            const onMouseUp = (e) => {
+            const onMouseUp = (e: { clientX: number; clientY: number; }) => {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
 
@@ -735,7 +796,7 @@ export class Game {
         });
     }
 
-    handleCellClick(event) {
+    handleCellClick(event: Event) {
         if (this.gameOver) return;
         // If it's the opponent's turn in multiplayer mode, do nothing
         if (p2pConnection?.gameId && ((this.currentPlayer === 1 && !p2pConnection.isHost) || (this.currentPlayer === 2 && p2pConnection.isHost))) {
@@ -817,7 +878,7 @@ export class Game {
         }
     }
 
-    handleCardSelect(cardElement) {
+    handleCardSelect(cardElement: { closest: (arg0: string) => null; dataset: { type: any; cost: string; }; classList: { add: (arg0: string) => void; }; }) {
         if (this.gameOver) return;
         if (p2pConnection?.gameId && ((this.currentPlayer === 1 && !p2pConnection.isHost) || (this.currentPlayer === 2 && p2pConnection.isHost))) {
             return;
@@ -877,7 +938,7 @@ export class Game {
         this.updateActionText(translations[preferredLanguage]['select_spawn'] + ` ${translations[preferredLanguage][unitType + "_name"]}`);
     }
 
-    selectUnit(unitElement, row, col) {
+    selectUnit(unitElement: { classList: { add: (arg0: string) => void; }; }, row: number, col: number) {
         // Deselect previous unit and card
         this.deselectAll();
 
@@ -1043,7 +1104,7 @@ export class Game {
         });
     }
 
-    highlightValidAbilityTargets(targets) {
+    highlightValidAbilityTargets(targets: { row: any; col: any; }[]) {
         // Clear existing highlights
         document.querySelectorAll('.cell-highlight').forEach(highlight => highlight.remove());
 
@@ -1062,7 +1123,7 @@ export class Game {
         });
     }
 
-    getValidMoves(row, col) {
+    getValidMoves(row: number, col: number) {
         const unit = this.board[row][col];
         if (!unit) return [];
 
@@ -1316,7 +1377,7 @@ export class Game {
         return validMoves;
     }
 
-    getValidAttacks(row, col) {
+    getValidAttacks(row: number, col: number) {
         const unit = this.board[row][col];
         if (!unit) return [];
 
@@ -1530,7 +1591,7 @@ export class Game {
         return validAttacks;
     }
 
-    getValidAbilityTargets(row, col) {
+    getValidAbilityTargets(row: number, col: number) {
         const unit = this.board[row][col];
         if (!unit) return [];
 
@@ -1596,23 +1657,23 @@ export class Game {
         return validTargets;
     }
 
-    isValidMove(row, col) {
+    isValidMove(row: number, col: number) {
         return this.validMoves.some(move => move.row === row && move.col === col);
     }
 
-    isValidAttack(row, col) {
+    isValidAttack(row: number, col: number) {
         return this.validAttacks.some(attack => attack.row === row && col === col);
     }
 
-    isValidAbilityTarget(row, col) {
-        return this.validAbilityTargets.some(target => target.row === row && target.col === col);
+    isValidAbilityTarget(row: number, col: number) {
+        return this.validAbilityTargets.some((target: { row: any; col: any; }) => target.row === row && target.col === col);
     }
 
-    isValidPosition(row, col) {
+    isValidPosition(row: number, col: number) {
         return row >= 0 && row < BOARD_ROWS && col >= 0 && col < BOARD_COLS;
     }
 
-    trySpawnUnit(row, col) {
+    trySpawnUnit(row: number, col: number) {
         if (this.selectedCard.type === 'phoenix') {
             if ((row + col) % 2 === 0) {
                 this.updateActionText(translations[preferredLanguage]['phoenix_invalid_spawn']);
@@ -1690,7 +1751,7 @@ export class Game {
         this.endTurn();
     }
 
-    moveUnit(newRow, newCol, id = null, selectedAction = null) {
+    moveUnit(newRow: number, newCol: number, id = null, selectedAction = null) {
         if (!this.selectedUnit && !id) return;
 
         let unit;
@@ -1739,7 +1800,7 @@ export class Game {
         };
     }
 
-    animateUnitMovement(unit, oldRow, oldCol, newRow, newCol) {
+    animateUnitMovement(unit: any, oldRow: any, oldCol: any, newRow: any, newCol: any) {
         const unitElement = document.querySelector(`.board-cell[data-row="${oldRow}"][data-col="${oldCol}"] .unit`);
         const newCell = document.querySelector(`.board-cell[data-row="${newRow}"][data-col="${newCol}"]`);
 
@@ -1767,7 +1828,7 @@ export class Game {
         });
     }
 
-    attackUnit(targetRow, targetCol, id = null) {
+    attackUnit(targetRow: number, targetCol: number, id = null) {
         if (!this.selectedUnit && !id) return;
 
         let unit;
@@ -1827,7 +1888,7 @@ export class Game {
         if (p2pConnection && p2pConnection.isHost) this.endTurn();
     }
 
-    useAbility(targetRow, targetCol) {
+    useAbility(targetRow: number, targetCol: number) {
         if (!this.selectedUnit) return;
 
         const {
@@ -1875,7 +1936,7 @@ export class Game {
 
         // If we have a moved unit this turn, check if it can still attack or use ability
         if (this.movedUnitThisTurn) {
-            const movedUnitInfo = player.units.find(info => info.unit === this.movedUnitThisTurn);
+            const movedUnitInfo = player.units.find((info: { unit: any; }) => info.unit === this.movedUnitThisTurn);
             if (movedUnitInfo) {
                 const unit = movedUnitInfo.unit;
                 const canAttack = !unit.hasAttacked && UNITS[unit.type].attack !== 'none' && player.mana >= 1;
@@ -1889,14 +1950,14 @@ export class Game {
             }
         } else {
             // No unit moved yet, check if any unit can move
-            canStillAct = player.units.some(unitInfo => {
+            canStillAct = player.units.some((unitInfo: { unit: any; }) => {
                 const unit = unitInfo.unit;
                 return !unit.hasMoved && !unit.justSpawned && UNITS[unit.type].movement !== 'none';
             });
         }
 
         // Also check if player has enough mana to play any cards
-        const hasPlayableCards = player.hand.some(card => {
+        const hasPlayableCards = player.hand.some((card: string | number) => {
             return UNITS[card].cost <= player.mana;
         });
 
@@ -1909,7 +1970,7 @@ export class Game {
         }
     }
 
-    destroyUnit(row, col) {
+    destroyUnit(row: string | number, col: string | number) {
         const unit = this.board[row][col];
         if (!unit) return;
 
@@ -1933,7 +1994,7 @@ export class Game {
         // Remove from player units list
         const playerIndex = unit.player;
         const playerUnits = this.players[playerIndex].units;
-        const unitIndex = playerUnits.findIndex(u => u.row === row && u.col === col);
+        const unitIndex = playerUnits.findIndex((u: { row: any; col: any; }) => u.row === row && u.col === col);
 
         if (unitIndex !== -1) {
             playerUnits.splice(unitIndex, 1);
@@ -1950,7 +2011,7 @@ export class Game {
     endTurn() {
         this.stopTurnTimer();
         // Reset unit flags for the current player
-        this.players[this.currentPlayer].units.forEach(unitInfo => {
+        this.players[this.currentPlayer].units.forEach((unitInfo: { unit: any; }) => {
             const unit = unitInfo.unit;
             unit.hasMoved = false;
             unit.hasAttacked = false;
@@ -1986,7 +2047,7 @@ export class Game {
         player.mana = Math.max(0, Math.min(player.mana + 1, player.maxMana));
 
         // Add extra mana from Seer units
-        const seerCount = player.units.filter(u => u.unit.type === 'seer').length;
+        const seerCount = player.units.filter((u: { unit: { type: string; }; }) => u.unit.type === 'seer').length;
         player.mana += seerCount;
 
         // Draw card for new player
@@ -2003,7 +2064,7 @@ export class Game {
         document.getElementById('turn-indicator').textContent = `${translations[preferredLanguage]['turn']} ${this.turn} - ${translations[preferredLanguage]['player']} ${this.currentPlayer}`;
         this.highlightCurrentPlayer();
         if (this.timerMode && !this.gameOver) {
-            if (this.players[2].units.find(u => u.unit.type == "oracle")) {
+            if (this.players[2].units.find((u: { unit: { type: string; }; }) => u.unit.type == "oracle")) {
                 // check both of oracles are present before starting timer
                 this.startTurnTimer();
                 console.log("oracle2 is present, starting timer")
@@ -2057,7 +2118,7 @@ export class Game {
         // }
     }
 
-    endGame(winner) {
+    endGame(winner: number) {
         this.stopTurnTimer();
         this.gameOver = true;
         this.updateActionText(`${translations[preferredLanguage]['player_wins'].replace('{player}', winner)}`);
@@ -2164,7 +2225,7 @@ export class Game {
     }
     // Helper methods for specific abilities and attacks
 
-    pullUnitTowards(fromRow, fromCol, toRow, toCol) {
+    pullUnitTowards(fromRow: number, fromCol: number, toRow: number, toCol: number) {
         const unit = this.board[fromRow][fromCol];
         if (!unit) return;
 
@@ -2195,7 +2256,7 @@ export class Game {
             // Update unit position in player's units list
             const playerIndex = unit.player;
             const playerUnits = this.players[playerIndex].units;
-            const unitInfo = playerUnits.find(u => u.row === fromRow && u.col === fromCol);
+            const unitInfo = playerUnits.find((u: { row: any; col: any; }) => u.row === fromRow && u.col === fromCol);
 
             if (unitInfo) {
                 unitInfo.row = newRow;
@@ -2204,7 +2265,7 @@ export class Game {
         }
     }
 
-    swapUnits(row1, col1, row2, col2) {
+    swapUnits(row1: string | number, col1: string | number, row2: string | number, col2: string | number) {
         const unit1 = this.board[row1][col1];
         const unit2 = this.board[row2][col2];
 
@@ -2234,9 +2295,9 @@ export class Game {
         this.updateUnitPosition(unit2.player, row2, col2, row1, col1);
     }
 
-    updateUnitPosition(playerIndex, oldRow, oldCol, newRow, newCol) {
+    updateUnitPosition(playerIndex: string | number, oldRow: any, oldCol: any, newRow: any, newCol: any) {
         const playerUnits = this.players[playerIndex].units;
-        const unitInfo = playerUnits.find(u => u.row === oldRow && u.col === oldCol);
+        const unitInfo = playerUnits.find((u: { row: any; col: any; }) => u.row === oldRow && u.col === oldCol);
 
         if (unitInfo) {
             unitInfo.row = newRow;
@@ -2244,7 +2305,7 @@ export class Game {
         }
     }
 
-    performExplosiveAttack(row, col) {
+    performExplosiveAttack(row: number, col: number) {
         // Apply explosive attack to all surrounding squares
         for (let r = -1; r <= 1; r++) {
             for (let c = -1; c <= 1; c++) {
@@ -2273,7 +2334,7 @@ export class Game {
         this.destroyUnit(row, col);
     }
 
-    triggerTitanSpawnEffect(row, col) {
+    triggerTitanSpawnEffect(row: number, col: number) {
         // Apply damage to all surrounding squares
         for (let r = -1; r <= 1; r++) {
             for (let c = -1; c <= 1; c++) {
@@ -2346,13 +2407,13 @@ export class Game {
         }
     }
 
-    updateHandDisplay(playerIndex) {
+    updateHandDisplay(playerIndex: number) {
         const handContainer = document.getElementById(`player-${playerIndex === 1 ? 'one' : 'two'}-hand`);
         handContainer.innerHTML = '';
 
         const player = this.players[playerIndex] || Object.values(this.players).find(p => p.uuid === playerIndex);
-        const hand = player.hand.includes("oracle") ? player.hand.filter(unitType => unitType === "oracle") : player.hand;
-        hand.forEach(unitType => {
+        const hand = player.hand.includes("oracle") ? player.hand.filter((unitType: string) => unitType === "oracle") : player.hand;
+        hand.forEach((unitType: string | number | undefined) => {
             const unitData = UNITS[unitType];
 
             const card = document.createElement('div');
@@ -2389,7 +2450,7 @@ export class Game {
             handContainer.appendChild(card);
 
             // Add hover functionality for each card
-            let hoverTimer = null;
+            let hoverTimer: number | null | undefined = null;
             let hoverDelay = 750;
 
             card.addEventListener('mouseover', (e) => {
@@ -2414,7 +2475,7 @@ export class Game {
         }
     }
 
-    updateUnitInfoPanel(unit) {
+    updateUnitInfoPanel(unit: { type: string | number; player: number; health: any; justSpawned: any; hasMoved: any; hasAttacked: any; usedAbility: any; }) {
         const unitInfo = document.querySelector('#unit-info .unit-details');
         if (!unit) {
             unitInfo.textContent = translations[preferredLanguage]['select_unit_info'];
@@ -2447,7 +2508,7 @@ export class Game {
         unitInfo.innerHTML = infoHTML;
     }
 
-    updateUnitHealthDisplay(row, col) {
+    updateUnitHealthDisplay(row: string | number, col: string | number) {
         const unit = this.board[row][col];
         if (!unit) return;
 
@@ -2472,11 +2533,11 @@ export class Game {
         }
     }
 
-    updateActionText(message) {
+    updateActionText(message: string | null) {
         document.getElementById(`player-${this.currentPlayer === 1 ? 'one' : 'two'}-action`).textContent = message;
     }
 
-    updateActionOptions(unit, canMove, canAttack, hasAbility, canDash) {
+    updateActionOptions(unit: { justSpawned: any; type: string | number; }, canMove: boolean, canAttack: boolean, hasAbility: any, canDash: any) {
         let actionText = '';
 
         if (unit.justSpawned) {
@@ -2500,11 +2561,11 @@ export class Game {
         this.updateActionText(actionText);
     }
 
-    hasPlacedOracle(player) {
-        return this.players[player].units.some(unitInfo => unitInfo.unit.type === 'oracle');
+    hasPlacedOracle(player: number) {
+        return this.players[player].units.some((unitInfo: { unit: { type: string; }; }) => unitInfo.unit.type === 'oracle');
     }
 
-    getValidDash(row, col) {
+    getValidDash(row: number, col: number) {
         const unit = this.board[row][col];
         if (!unit) return [];
 
@@ -2716,7 +2777,7 @@ export class Game {
         return validMoves;
     }
 
-    updateFromState(gameState) {
+    updateFromState(gameState: { currentPlayer: number; turn: number; gameOver: boolean; board: any[]; }) {
         if (!gameState) return;
 
         this.currentPlayer = gameState.currentPlayer;
@@ -2724,8 +2785,8 @@ export class Game {
         this.gameOver = gameState.gameOver;
 
         // Update the board with a deep copy
-        this.board = gameState.board.map(row => {
-            return row.map(cell => {
+        this.board = gameState.board.map((row: any[]) => {
+            return row.map((cell: any) => {
                 return cell ? {
                     ...cell
                 } : null; // Copy the cell object
@@ -2768,7 +2829,7 @@ export class Game {
         }
     }
 
-    createUnitElement(unit, row, col, animated = false) {
+    createUnitElement(unit: { type: any; player: any; health: any; hasMoved?: boolean; hasAttacked?: boolean; usedAbility?: boolean; justSpawned: any; hasDashed?: boolean; uuid?: string; }, row: number, col: number, animated = false) {
         const cell = document.querySelector(`.board-cell[data-row="${row}"][data-col="${col}"]`);
         if (!cell) return;
 
@@ -2852,7 +2913,7 @@ export class Game {
         }
     }
 
-    setTurnAndPlayer(turn, player) {
+    setTurnAndPlayer(turn: number, player: number) {
         this.turn = turn;
         this.currentPlayer = player;
 
@@ -2864,7 +2925,7 @@ export class Game {
         document.getElementById('turn-indicator').textContent = `${translations[preferredLanguage]['turn']} ${this.turn} - ${translations[preferredLanguage]['player']} ${this.currentPlayer}`;
     }
 
-    findUnitByUUID(uuid) {
+    findUnitByUUID(uuid: never) {
         for (let row = 0; row < BOARD_ROWS; row++) {
             for (let col = 0; col < BOARD_COLS; col++) {
                 const unit = this.board[row][col];
@@ -2876,7 +2937,7 @@ export class Game {
         return null; // Or throw an error if you prefer
     }
 
-    getUnitPosition(unit) {
+    getUnitPosition(unit: { uuid: any; }) {
         for (let row = 0; row < BOARD_ROWS; row++) {
             for (let col = 0; col < BOARD_COLS; col++) {
                 if (this.board[row][col]?.uuid === unit.uuid) {
@@ -2890,7 +2951,7 @@ export class Game {
         return null; // Or throw an error if you prefer
     }
 
-    showUnitCardPreview(unitType, x, y) {
+    showUnitCardPreview(unitType: string | number, x: number, y: number) {
         const unitData = UNITS[unitType];
         if (!unitData) return;
 
